@@ -95,7 +95,7 @@ LaTeX可制作各类文档，其中也不乏简历，与其他各类文档相比
 
 ```tex
 
-\newcommand{\datedsubsection}[2]{%
+\newcommand{\datedsubsection}[2]{ %
   \subsection[#1]{#1 \hfill #2}%
 }
 
@@ -128,13 +128,13 @@ LaTeX可制作各类文档，其中也不乏简历，与其他各类文档相比
 
 ```tex
 
-\newcommand{\name}[1]{%
+\newcommand{\name}[1]{ %
   \centerline{\Huge{#1}}
 }
 
-\newcommand\contact[5]{%
-    \centerline{%
-        \makebox[0pt][c]{%
+\newcommand\contact[5]{ %
+    \centerline{ %
+        \makebox[0pt][c]{ %
             #1 {\large\textperiodcentered} #2 {\large\textperiodcentered} #3
             \ #4 \ \ #5%
         }%
@@ -176,7 +176,7 @@ I attended the University of Nowhere from 2012 to 2016.
 
 ```tex
 
-\newcommand{\researchitems}[3]{%
+\newcommand{\researchitems}[3]{ %
     \begin{itemize}
     \item #1
     \item #2
