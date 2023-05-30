@@ -2,7 +2,7 @@
  * @Author: weiekko weiekko@gmail.com
  * @Date: 2023-05-29 22:33:22
  * @LastEditors: weiekko weiekko@gmail.com
- * @LastEditTime: 2023-05-30 13:47:17
+ * @LastEditTime: 2023-05-30 14:41:42
  * @FilePath: \docs\docs\code\cpp_primer.md
  * @Description: 
  * 
@@ -277,3 +277,73 @@ while (mid != end && *mid != sought) {
 
 
 ## 4 表达式
+
+sizeof运算符
+
+```cpp
+sizeof (type)
+sizeof expr
+```
+
+sizeof返回一条表达式或一个类型名字所占的字节数
+
+```cpp
+sizeof (int)
+sizeof (Sales_data)
+```
+
+
+
+类型转换
+
+隐式转换
+```cpp
+bool b = 42; // b为true
+int i = b; // i的值为1
+i = 3.14; // i的值为3
+double pi = i; // pi的值为3.0
+unsigned char c = -1; // 假设char占8比特，c的值为255
+signed char c2 = 256; // 假设char占8比特，c2的值是未定义的
+```
+
+显式转换
+
+```cpp
+bool b = 42; // b为true
+int i = b; // i的值为1
+i = static_cast<int>(3.14); // i的值为3
+
+//指针
+int *ip;
+char *pc = reinterpret_cast<char*>(ip); // 将指针ip的值转换成char*类型
+```
+
+static_cast 具有明确定义的类型转换 只要不包含底层const 都可以使用
+```cpp
+double slope = static_cast<double>(j) / i;
+```
+
+dynamic_cast 通常用于将基类的指针或引用安全地转换成派生类的指针或引用
+```cpp
+if (Base *bp = dynamic_cast<Base*>(p))
+    bp->f();
+else
+    // 处理dynamic_cast失败的情况
+```
+
+const_cast 只能改变运算对象的底层const
+```cpp
+const char *pc;
+char *p = const_cast<char*>(pc); // 正确：但是通过p写值是未定义的
+```
+
+reinterpret_cast 通常为运算对象的位模式提供较低层次上的重新解释
+```cpp
+int *ip;
+char *pc = reinterpret_cast<char*>(ip); // 将指针ip的值转换成char*类型
+```
+
+
+**建议不用强制类型转换**
+
+## 5 语句
