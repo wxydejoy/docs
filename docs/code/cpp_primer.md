@@ -2,7 +2,7 @@
  * @Author: weiekko weiekko@gmail.com
  * @Date: 2023-05-29 22:33:22
  * @LastEditors: weiekko weiekko@gmail.com
- * @LastEditTime: 2023-05-30 14:41:42
+ * @LastEditTime: 2023-05-31 12:44:25
  * @FilePath: \docs\docs\code\cpp_primer.md
  * @Description: 
  * 
@@ -347,3 +347,243 @@ char *pc = reinterpret_cast<char*>(ip); // 将指针ip的值转换成char*类型
 **建议不用强制类型转换**
 
 ## 5 语句
+
+try
+
+```cpp
+try {
+    program-statements
+} catch (exception-declaration) {
+    handler-statements
+} catch (exception-declaration) {
+    handler-statements
+} catch (exception-declaration) {
+    handler-statements
+}
+```
+
+标准异常
+
+```cpp
+exception // 最常见的异常，没有提供任何额外信息
+runtime_error // 可以在运行时检测出的错误
+range_error // 当使用一个超出有效范围的值时会被检测出来
+overflow_error // 当发生上溢时会被检测出来
+underflow_error // 当发生下溢时会被检测出来
+logic_error // 程序逻辑错误
+domain_error // 当使用了一个无效的参数时会被检测出来
+invalid_argument // 当使用了一个无效的参数时会被检测出来
+length_error // 当创建了一个超出该类型最大长度的对象时会被检测出来
+out_of_range // 当使用了一个超出有效范围的值时会被检测出来
+```
+
+
+
+## 6 函数
+
+main 处理命令行选项
+
+```cpp
+int main(int argc, char *argv[]) {
+    // ...
+}
+```
+
+argc 是一个整数，用于表示在命令行中输入的参数的数目
+
+argv 是一个数组，每个元素都是一个字符指针，指向一个以空字符结尾的字符数组，其中的字符数组表示一个C风格字符串
+
+含有可变形参的函数
+
+
+
+```cpp
+void error_msg(initializer_list<string> il) {
+    for (auto beg = il.begin(); beg != il.end(); ++beg)
+        cout << *beg << " ";
+    cout << endl;
+}
+```
+
+省略符形参
+
+```cpp
+
+void foo(parm_list, ...) {
+    // ...
+}
+```
+
+
+**不要返回局部对象的引用或指针**
+
+
+列表初始化返回值
+
+```cpp
+vector<string> process() {
+    // ...
+    if (expected.empty())
+        return {}; // 返回一个空的vector
+    else if (expected == actual)
+        return {"functionX", "okay"}; // 返回一个有两个元素的vector
+    else
+        return {"functionX", expected, actual}; // 返回一个有三个元素的vector
+}
+```
+
+
+主函数main的返回值
+
+```cpp
+int main() {
+    // ...
+    return 0; // 表示成功
+    return -1; // 表示失败
+}
+```
+
+```cpp
+int main(int argc, char *argv[]) {
+    // ...
+    return EXIT_SUCCESS; // 表示成功
+    return EXIT_FAILURE; // 表示失败
+}
+```
+
+
+递归
+
+调用自身的函数
+
+```cpp
+int factorial(int val) {
+    if (val > 1)
+        return factorial(val - 1) * val;
+    return 1;
+}
+```
+
+返回数组指针的函数
+
+```cpp
+// 返回数组指针的函数
+Type (*function(parameter_list))[dimension] {
+    // ...
+}
+```
+
+```cpp
+
+
+int (*func(int i))[10]; // func是一个函数，该函数接受一个int形参，返回一个指针，该指针指向含有10个整数的数组
+```
+
+
+尾置返回类型
+
+```cpp
+auto func(int i) -> int(*)[10]; // 等价于上面的func
+```
+
+使用decltype
+
+```cpp
+int odd[] = {1, 3, 5, 7, 9};
+int even[] = {0, 2, 4, 6, 8};
+decltype(odd) *arrPtr(int i) {
+    return (i % 2) ? &odd : &even; // 返回一个指向数组的指针
+}
+```
+
+函数重载
+
+```cpp
+// 重载的函数必须在形参数量或形参类型上有所区别
+// 不能仅通过返回类型区分
+Record lookup(const Account&);
+Record lookup(const Phone&);
+Record lookup(const Person&);
+```
+
+const_cast 与重载
+
+const_cast 只能改变运算对象的底层const  
+
+```cpp
+// 重载的函数不能仅通过返回类型区分
+const string &shorterString(const string &s1, const string &s2) {
+    return s1.size() <= s2.size() ? s1 : s2;
+}
+string &shorterString(string &s1, string &s2) {
+    auto &r = shorterString(const_cast<const string&>(s1),
+                            const_cast<const string&>(s2));
+    return const_cast<string&>(r);
+}
+```
+
+
+特殊用途语言特性
+
+默认实参
+
+```cpp
+string screen(sz ht = 24, sz wid = 80, char backgrnd = ' ');
+```
+
+默认实参只能在函数声明中出现一次
+
+
+内联函数
+
+```cpp
+inline const string &shorterString(const string &s1, const string &s2) {
+    return s1.size() <= s2.size() ? s1 : s2;
+}
+```
+
+
+constexpr函数
+
+constexpr函数是指能用于常量表达式的函数
+
+```cpp
+constexpr int new_sz() { return 42; }
+
+```
+调试帮助
+
+```cpp
+assert(expr);
+// 如果expr为假，则终止程序的执行
+```
+
+NDEBUG
+
+assert宏定义在cassert头文件中，该头文件定义了一个名为NDEBUG的预处理变量，如果定义了NDEBUG，则assert什么也不做
+
+```cpp
+#ifndef NDEBUG
+    cerr << __func__ << ": array size is " << size << endl;
+#endif
+```
+
+其中
+```cpp
+__func__  // 是一个局部静态变量，存放着当前函数的名字
+__FILE__  // 是一个字符串字面值，存放着当前文件的名字
+__LINE__  // 是一个整型常量，存放着当前行的行号
+__TIME__  // 是一个字符串字面值，存放着文件被编译的时间
+__DATE__  // 是一个字符串字面值，存放着文件被编译的日期
+```
+
+
+函数指针
+
+```cpp
+bool lengthCompare(const string &, const string &);
+bool (*pf)(const string &, const string &); // 未初始化
+pf = lengthCompare; // pf现在指向名为lengthCompare的函数
+pf = &lengthCompare; // 等价的赋值语句
+```
+
