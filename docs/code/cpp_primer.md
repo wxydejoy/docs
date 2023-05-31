@@ -2,7 +2,7 @@
  * @Author: weiekko weiekko@gmail.com
  * @Date: 2023-05-29 22:33:22
  * @LastEditors: weiekko weiekko@gmail.com
- * @LastEditTime: 2023-05-31 12:44:25
+ * @LastEditTime: 2023-05-31 14:18:47
  * @FilePath: \docs\docs\code\cpp_primer.md
  * @Description: 
  * 
@@ -587,3 +587,179 @@ pf = lengthCompare; // pf现在指向名为lengthCompare的函数
 pf = &lengthCompare; // 等价的赋值语句
 ```
 
+## 7 类
+
+构造函数初始值列表
+
+```cpp
+Sales_data::Sales_data(std::istream &is) : bookNo("0"), units_sold(0), revenue(0.0) {
+    is >> *this;
+}
+```
+其中 bookNo("0") 是一个构造函数初始值列表，用于为新创建的对象的一个或几个数据成员赋初值
+
+
+访问控制与封装
+
+```cpp
+class Sales_data {
+public: // 接口：成员函数
+    Sales_data() = default;
+    Sales_data(const std::string &s) : bookNo(s) { }
+    Sales_data(const std::string &s, unsigned n, double p) :
+               bookNo(s), units_sold(n), revenue(p*n) { }
+    Sales_data(std::istream &);
+
+    std::string isbn() const { return bookNo; }
+    Sales_data& combine(const Sales_data&);
+    double avg_price() const;
+
+private: // 实现：数据成员
+    std::string bookNo;
+    unsigned units_sold = 0;
+    double revenue = 0.0;
+};
+```
+
+友元 
+
+```cpp
+class Sales_data {
+    friend Sales_data add(const Sales_data&, const Sales_data&);
+    friend std::istream &read(std::istream&, Sales_data&);
+    friend std::ostream &print(std::ostream&, const Sales_data&);
+public:
+
+    // constructors
+    Sales_data() = default;
+    Sales_data(const std::string &s) : bookNo(s) { }
+    Sales_data(const std::string &s, unsigned n, double p) :
+               bookNo(s), units_sold(n), revenue(p*n) { }
+    Sales_data(std::istream &is) { read(is, *this); }
+
+    // operations on Sales_data objects
+    std::string isbn() const { return bookNo; }
+    Sales_data& combine(const Sales_data&);
+    
+private:
+    double avg_price() const;
+    std::string bookNo;
+    unsigned units_sold = 0;
+    double revenue = 0.0;
+};
+
+// 非成员接口函数
+Sales_data add(const Sales_data&, const Sales_data&);
+std::istream &read(std::istream&, Sales_data&);
+std::ostream &print(std::ostream&, const Sales_data&);
+```
+
+友元的声明仅仅指定了访问权限，而非一个通常意义上的函数声明
+
+友元与public 的区别
+
+1. public访问权限：
+   - public是C++中的一种访问修饰符，用于指定类的成员对外部是可见和可访问的。
+   - public成员可以在类的内部和外部的任何地方被访问，包括类的成员函数、类的对象以及类的派生类等。
+   - public成员在类的外部可以被其他类或函数直接访问和使用。
+
+2. 友元关系：
+   - 友元关系是C++中一种特殊的关系，允许其他类或函数在类的成员访问权限之外访问该类的私有成员。
+   - 友元关系通过在类的定义中使用关键字friend来声明。友元可以是另一个类、一个函数或一个函数模板。
+   - 友元关系破坏了封装性，因为它允许其他实体直接访问类的私有成员，而不经过类的公共接口。
+
+区别：
+- 访问权限：public是控制类成员的访问权限的一种修饰符，而友元关系是一种特殊的授权机制，用于授予其他实体对类的私有成员的访问权限。
+- 范围：public成员可以在类的内部和外部被访问，而友元可以是其他类或函数，通过友元关系可以在类的成员访问权限之外访问私有成员。
+- 影响封装性：友元关系破坏了封装性，因为它允许其他实体直接访问类的私有成员，而public成员只是指定了成员的访问权限，并没有破坏封装性。
+
+
+委托构造函数
+
+```cpp
+class Sales_data {
+public:
+    //非委托构造函数
+    Sales_data(std::string s, unsigned cnt, double price) :
+               bookNo(s), units_sold(cnt), revenue(cnt * price) { }
+    //其余构造函数全部委托给另一个构造函数
+    Sales_data() : Sales_data("", 0, 0) { }
+    Sales_data(std::string s) : Sales_data(s, 0, 0) { }
+    Sales_data(std::istream &is) : Sales_data() { read(is, *this); }
+    // ...
+};
+```
+
+类 类型转换
+
+
+只允许一步类类型转换
+
+
+
+类 类型转换不是总能成功
+
+
+explicit 构造函数
+
+
+聚合类
+
+字面值常量类
+
+```cpp
+class Debug {
+public:
+    constexpr Debug(bool b = true) : hw(b), io(b), other(b) { }
+    constexpr Debug(bool h, bool i, bool o) : hw(h), io(i), other(o) { }
+    constexpr bool any() { return hw || io || other; }
+    void set_io(bool b) { io = b; }
+    void set_hw(bool b) { hw = b; }
+    void set_other(bool b) { hw = b; }
+private:
+    bool hw; // 硬件错误
+    bool io; // IO错误
+    bool other; // 其他错误
+};
+```
+
+```cpp
+constexpr Debug io_sub(false, true, false); // 错误状态中只有io是真
+if (io_sub.any()) // 如果有任何错误发生
+    cerr << "print appropriate error messages" << endl;
+constexpr Debug prod(false); // prod的所有错误状态都是假的
+if (prod.any()) // 如果有任何错误发生
+    cerr << "print an error message" << endl;
+```
+
+类的静态成员
+
+```cpp
+class Account {
+public:
+    void calculate() { amount += amount * interestRate; }
+    static double rate() { return interestRate; }
+    static void rate(double);
+private:
+    std::string owner;
+    double amount;
+    static double interestRate;
+    static double initRate();
+};
+
+double Account::interestRate = initRate();
+```
+
+```cpp
+double r;
+r = Account::rate(); // 访问静态成员
+a.rate(); // 通过对象访问静态成员
+```
+
+静态成员存在于任何对象之外，所以即使类的对象不存在，类的静态成员也可以被访问
+静态成员也不与任何对象绑定在一起，所以不存在this指针   静态成员函数不能声明成const的 也不能在函数体内使用this指针
+
+
+## 第二部分 C++标准库
+
+## 8 IO库
