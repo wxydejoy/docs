@@ -2,7 +2,7 @@
  * @Author: weiekko weiekko@gmail.com
  * @Date: 2023-05-29 22:33:22
  * @LastEditors: weiekko weiekko@gmail.com
- * @LastEditTime: 2023-05-31 14:18:47
+ * @LastEditTime: 2023-06-03 12:43:19
  * @FilePath: \docs\docs\code\cpp_primer.md
  * @Description: 
  * 
@@ -763,3 +763,187 @@ a.rate(); // 通过对象访问静态成员
 ## 第二部分 C++标准库
 
 ## 8 IO库
+
+没用过但留个印象吧
+
+IO 类
+
+
+```cpp
+#include <iostream> // istream, ostream, cin, cout
+
+
+#include <fstream> // ifstream, ofstream, fstream
+
+#include <sstream> // istringstream, ostringstream, stringstream
+```
+
+IO对象无拷贝或赋值
+
+```cpp
+ofstream out1, out2;
+out1 = out2; // 错误：不能对流对象赋值
+ofstream print(ofstream); // 错误：不能初始化ofstream参数
+out2 = print(out2); // 错误：不能拷贝流对象
+```
+
+条件状态
+
+```cpp
+int ival;
+while (cin >> ival, !cin.eof()) { // 读取直到遇到文件结束符
+    if (cin.bad()) // 系统级错误
+        throw runtime_error("IO流错误");
+    if (cin.fail()) { // 输入格式错误
+        cerr << "数据错误，请重试：" << endl;
+        cin.clear(istream::failbit); // 置位failbit
+        continue;
+    }
+    // 正常处理
+}
+```
+
+查询流的状态
+
+管理条件状态
+
+```cpp
+cin.clear(); // 使流有效
+cin.clear(istream::failbit); // 置位failbit
+cin.clear(istream::badbit); // 置位badbit
+cin.clear(istream::eofbit); // 置位eofbit
+```
+
+```cpp  
+// 重置所有条件状态
+cin.clear(); // 使流有效
+cin.sync(); // 清空输入缓冲区
+```
+
+
+管理输出缓冲区
+
+```cpp
+cout << "hi!" << endl; // 输出hi和一个换行，然后刷新缓冲区
+cout << "hi!" << flush; // 输出hi，然后刷新缓冲区，不附加任何额外字符
+cout << "hi!" << ends; // 输出hi和一个空字符，然后刷新缓冲区
+```
+
+unitbuf 操纵符
+
+```cpp
+cout << unitbuf; // 所有输出操作后都会立即刷新缓冲区
+cout << nounitbuf; // 回到正常的缓冲方式
+```
+
+
+WARN: 如果程序异常终止，输出缓冲区不会被刷新，所以输出不会显示出来
+
+关联输入和输出流
+
+```cpp
+cin.tie(&cout); // cin和cout关联在一起，cin先刷新缓冲区
+ostream *old_tie = cin.tie(nullptr); // cin不再与其他流关联
+cin.tie(&cerr); // cin和cerr关联在一起，cin先刷新缓冲区
+cin.tie(old_tie); // 重建cin和cout的关联
+```
+在这段代码中，为了将一个给定的流关联到一个新的输出流，我们将新流的指针传递给了tie。为了彻底解开流的关联，我们传递了一个空指针。每个流同时最多关联到一个流，但多个流可以同时关联到同一个ostream。
+
+文件输入输出
+
+```cpp
+#include <fstream>
+
+ifstream in(ifile); // 打开ifile并创建ifstream对象
+ofstream out; // 输出文件流，未绑定到任何文件
+out.open("file1"); // 打开file1并与out绑定
+ofstream out2("file2"); // 打开file2并与out2绑定
+```
+
+用fstream代替iostream & 
+
+```cpp
+ifstream input(argv[1]); // 打开argv[1]指向的文件
+ofstream output(argv[2]); // 打开argv[2]指向的文件
+Sales_data total; // 保存当前求和结果的变量
+if (read(input,total)){ //读取第一条
+    Sales_data trans; // 保存下一条交易数据的变量
+    while(read(input,total)){  //读取剩余
+        if(total.isbn() == trans.isbn())
+            total.combine(trans)
+        else{
+            print(output,total) // 输出结果
+            total = trans; // 处理下一本书
+        }
+    
+    }
+}
+```
+
+
+open 和 close
+
+```cpp
+ifstream in;
+in.open(ifile); // 打开ifile并与in绑定
+in.close(); // 关闭in与ifile的关联
+```
+
+```cpp
+ofstream out;
+out.open("file1"); // 打开file1并与out绑定
+out.close(); // 关闭out与file1的关联
+```
+
+自动构造和销毁流对象 python with open
+
+```cpp
+for (int i = 1; i < argc; ++i) {
+    ifstream input(argv[i]); // 打开当前文件
+    // ...
+} // input被销毁，文件自动关闭
+```
+
+
+文件模式
+
+```cpp
+in 以读方式打开
+out 以写方式打开
+app 追加方式打开
+ate 初始位置：文件尾
+trunc 截断文件
+binary 二进制方式打开
+```
+
+
+
+WARN : 以写方式打开一个文件时，如果文件不存在，则创建该文件；如果文件存在，则清空该文件
+```cpp
+ofstream out("file1", ofstream::app); // 打开file1并定位到文件尾
+ofstream out2("file2", ofstream::app | ofstream::binary); // 打开file2并定位到文件尾
+```
+
+保留被ofstream打开的文件中已有数据的唯一方法是显式指定app或in模式。
+
+
+
+string流
+
+```cpp
+#include <sstream>
+istringstream line("Hello 123 456");
+string word;
+while (line >> word)
+    cout << word << endl;
+```
+
+```cpp
+ostringstream os;
+os << "hi!" << endl;
+cout << os.str() << endl; // 输出hi!和一个换行
+```
+
+使用ostringstream 当我们逐步构造输出，希望最后一起打印时，ostringstream是很有用的。
+
+
