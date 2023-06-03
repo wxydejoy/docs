@@ -2,7 +2,7 @@
  * @Author: weiekko weiekko@gmail.com
  * @Date: 2023-05-29 22:33:22
  * @LastEditors: weiekko weiekko@gmail.com
- * @LastEditTime: 2023-06-03 12:43:19
+ * @LastEditTime: 2023-06-03 20:44:38
  * @FilePath: \docs\docs\code\cpp_primer.md
  * @Description: 
  * 
@@ -945,5 +945,331 @@ cout << os.str() << endl; // 输出hi!和一个换行
 ```
 
 使用ostringstream 当我们逐步构造输出，希望最后一起打印时，ostringstream是很有用的。
+
+
+## 9 顺序容器
+
+顺序容器
+
+```cpp
+vector //  可变大小数组 在尾部之外的位置插入或删除元素可能很慢
+deque // 双端队列 支持快速随机访问 在头尾插入/删除速度很快
+list // 双向链表 只支持双向顺序访问  任何位置插入/删除速度都很快
+forward_list // 单向链表 只支持单向顺序访问 任何位置插入/删除速度都很快
+array // 固定大小数组 不能添加或删除元素 支持快速随机访问
+string // 与vector相似 但专门用于保存字符 支持对字符的随机访问  在尾部插入/删除速度很快
+```
+
+通常使用vector
+
+基本原则
+
+- 除非有很好的理由选择其他容器，否则应使用vector
+- 如果程序有很多小的元素，且空间的额外开销很重要，则不要使用list或forward_list
+- 如果程序要求随机访问元素，应使用vector或deque
+- 如果程序要求在容器的中间位置插入或删除元素，应使用list或forward_list
+- 如果程序需要在头尾位置插入或删除元素，但不会在中间位置进行插入或删除操作，则使用deque
+- 如果程序只有在读取输入时才需要在容器中间位置插入元素，之后需要随机访问元素，则可以先使用vector读取输入，再使用swap将元素移动到deque中
+    - 首先，确定是否真的需要在容器中间位置添加元素。当处理输入数据时，通常可以很容易地向vector追加数据，然后再调用标准库的sort函数重排容器中的元素，从而避免在中间位置添加元素。
+    - 如果必须在中间位置插入元素，考虑在输入阶段使用1ist,一旦输入完成，将list中的内容拷贝到一个vector中。
+
+
+对容器可以保存的元素类型的限制
+
+顺序容器几乎可以保存任何类型的对象，
+
+
+通用容器操作
+
+```cpp
+//类型别名
+iterator // 迭代器
+const_iterator // 只读迭代器
+size_type // 无符号整型，足够保存容器中任意元素的个数
+difference_type // 有符号整型，足够保存两个迭代器之间的距离
+value_type // 元素类型
+reference // 左值引用，可以读写元素
+const_reference // const左值引用，只能读元素
+
+//构造函数
+C c; // 默认构造函数
+C c1(c2); // c1是c2的拷贝
+C c(b, e); // c中包含迭代器对b和e所表示范围中的元素
+C c{a, b, c...}; // c中包含初始值个数的元素，每个元素被赋予相应的初始值 列表初始化
+
+//赋值和swap
+c1 = c2; // c1中的元素被替换成c2中元素的拷贝
+c = {a, b, c...}; // c中的元素被替换成列表中元素的拷贝
+a.swap(b); // 交换a和b的元素，两个容器必须相同且具有相同的元素类型
+
+//大小
+
+c.size(); // 返回c中元素的个数
+c.max_size(); // 返回c能容纳的最大元素数
+c.empty(); // 如果c中不含有任何元素，则返回true，否则返回false
+
+//添加和删除元素 不适应于array
+
+c.insert(args); // 将args指定的元素添加到c中，返回指向新添加的元素的迭代器
+c.erase(args); // 从c中删除args指定的元素，返回指向最后一个被删除元素之后位置的迭代器
+c.clear(); // 删除c中所有元素
+
+//关系运算符
+==, !=, <, <=, >, >=; // 利用元素的<运算符进行比较
+
+//获取迭代器
+c.begin(); // 返回指向容器中第一个元素的迭代器
+c.end(); // 返回指向容器中最后一个元素之后位置的迭代器
+
+//反向容器的额外成员 不支持forward_list
+reverse_iterator // 反向迭代器
+const_reverse_iterator // 只读反向迭代器
+c.rbegin(); // 返回指向最后一个元素的迭代器
+c.rend(); // 返回指向第一个元素之前位置的迭代器
+c.crbegin(); // 返回指向最后一个元素的const反向迭代器
+c.crend(); // 返回指向第一个元素之前位置的const反向迭代器
+```
+
+迭代器
+
+这里和py差不多
+
+类型别名的使用
+
+```cpp
+vector<int>::iterator it; // it能读写vector<int>的元素
+string::iterator it2; // it2能读写string对象中的字符
+vector<int>::const_iterator it3; // it3只能读元素，不能写元素
+string::const_iterator it4; // it4只能读字符，不能写字符
+```
+
+虽然现在还有点看不懂 但总会看懂的
+
+ASSIGN
+
+```cpp
+list<string> names;
+vector<const char*> oldstyle;
+names = oldstyle; // 错误：容器类型不匹配
+names.assign(oldstyle.cbegin(), oldstyle.cend()); // 正确：可以将const char*指针转换成string
+```
+
+顺序容器操作
+
+添加元素
+
+```cpp
+// 这些操作会改变容器的大小 不适用于array
+// forward_list 有特殊版本的insert和emplace
+// forward_list 不支持push_back和emplace_back
+// vector 和 string 不支持push_front和emplace_front
+c.push_back(t); // 将t添加到c的尾部
+c.emplace_back(args); // 使用args在c的尾部创建一个元素
+c.push_front(t); // 将t添加到c的头部
+c.emplace_front(args); // 使用args在c的头部创建一个元素
+c.insert(p, t); // 将t插入到迭代器p指定的元素之前
+c.emplace(p, args); // 使用args在迭代器p指定的元素之前创建一个元素
+c.insert(p, n, t); // 将t的n个拷贝插入到迭代器p指定的元素之前
+c.insert(p, b, e); // 将迭代器b和e指定范围中的元素插入到迭代器p指定的元素之前
+c.insert(p, il); // il是一个花括号包围的元素值列表 将初始化列表中的元素插入到迭代器p指定的元素之前
+```
+
+访问元素
+
+```cpp
+// at和[]只适用于string vector deque array
+// back 不适用于forward_list
+c.back(); // 返回c中最后一个元素的引用
+c.front(); // 返回c中第一个元素的引用
+c[n]; // 返回c中第n个元素的引用
+c.at(n); // 返回c中第n个元素的引用，执行边界检查，越界抛出out_of_range异常
+```
+
+删除元素
+
+```cpp
+// 这些操作会改变容器的大小 不适用于array
+// forward_list 有特殊版本的erase和pop_front
+// vector 和 string 不支持pop_front
+c.pop_back(); // 删除c中的尾元素
+c.pop_front(); // 删除c中的头元素
+c.erase(p); // 删除迭代器p指定的元素
+c.erase(b, e); // 删除迭代器b和e指定范围中的元素
+c.clear(); // 删除c中的所有元素
+```
+
+特殊的forward_list操作
+
+```cpp
+// forward_list 不支持size
+// forward_list 不支持push_back和emplace_back
+// forward_list 不支持pop_back
+// forward_list 不支持insert和emplace
+// forward_list 不支持resize
+
+lst.before_begin(); // 返回指向首前元素的迭代器
+lst.cbefore_begin(); // 返回指向首前元素的const迭代器
+lst.insert_after(p, t); // 将t插入到迭代器p指定的元素之后
+lst.emplace_after(p, args); // 使用args在迭代器p指定的元素之后创建一个元素
+lst.insert_after(p, n, t); // 将t的n个拷贝插入到迭代器p指定的元素之后
+lst.insert_after(p, b, e); // 将迭代器b和e指定范围中的元素插入到迭代器p指定的元素之后
+lst.insert_after(p, il); // il是一个花括号包围的元素值列表 将初始化列表中的元素插入到迭代器p指定的元素之后
+
+emplace_after(p, args); // 使用args在迭代器p指定的元素之后创建一个元素
+
+lst.erase_after(p); // 删除迭代器p指定的元素之后的元素
+lst.erase_after(b, e); // 删除迭代器b和e指定范围中的元素之后的元素
+```
+
+改变容器大小
+
+```cpp
+// 不适用于array    
+c.resize(n); // 将c中的元素个数改变为n，多余的元素被删除
+c.resize(n, t); // 将c中的元素个数改变为n，多余的元素被t初始化
+```
+
+容器操作可能使迭代器失效
+
+所以不要保存end返回的迭代器
+
+vector 对象是如何增长的
+
+vector 预留空间作为备用
+
+管理容量的成员函数
+
+```cpp
+c.capacity(); // 返回c能保存而不必分配新内存的元素总数
+c.reserve(n); // 分配至少能容纳n个元素的内存空间
+c.shrink_to_fit(); // 要求归还多余的内存 但是不保证一定归还
+```
+
+capacity 和 size 的区别
+
+capacity 能装多少
+
+size 装了多少
+
+额外的string操作
+
+构造string的其他方法
+
+```cpp
+string s(cp, n); // s是cp指向的数组的前n个字符的拷贝
+string s(s2, pos2); // s是s2从pos2开始的字符的拷贝
+string s(s2, pos2, len2); // s是s2从pos2开始的len2个字符的拷贝
+string s("value"); // s是字面值"value"的拷贝
+string s(n, 'c'); // s是由连续n个字符c组成的串
+```
+
+substr
+
+```cpp
+string s("hello world");
+string s2 = s.substr(0, 5); // s2是hello
+string s3 = s.substr(6); // s3是world
+```
+
+改变string的其他方法
+
+```cpp
+s.insert(pos, args); // 在pos位置插入args指定的元素
+s.erase(pos, len); // 删除从pos开始的len个字符
+s.replace(pos, len, args); // 删除从pos开始的len个字符，然后在pos位置插入args指定的元素
+```
+
+append 和 replace
+
+```cpp
+s.append(args); // 将args指定的字符追加到s的末尾
+s.replace(b, e, args); // 删除迭代器b和e指定范围中的字符，然后在b位置插入args指定的字符
+```
+
+assign
+
+```cpp
+s.assign(args); // 用args指定的字符替换s中原来的字符
+s.assign(b, e); // 用迭代器b和e指定范围中的字符替换s中原来的字符
+s.assign(cp, n); // 用cp指向的数组中的前n个字符替换s中原来的字符
+s.assign(s2); // 用s2中的字符替换s中原来的字符
+s.assign(s2, pos2, len2); // 用s2中从pos2开始的len2个字符替换s中原来的字符
+s.assign("value"); // 用字面值"value"中的字符替换s中原来的字符
+s.assign(n, 'c'); // 用n个字符c替换s中原来的字符
+```
+
+string搜索操作
+
+```cpp
+s.find(args); // 在s中查找args指定的字符
+s.rfind(args); // 在s中从末尾开始查找args指定的字符
+s.find_first_of(args); // 在s中查找args中任意一个字符第一次出现的位置
+s.find_last_of(args); // 在s中查找args中任意一个字符最后一次出现的位置
+s.find_first_not_of(args); // 在s中查找第一个不在args中的字符
+s.find_last_not_of(args); // 在s中查找最后一个不在args中的字符
+```
+
+string比较操作
+
+```cpp
+s.compare(args); // 比较s和args指定的字符串
+```
+
+string数值转换
+
+```cpp
+to_string(args); // 返回args的字符串表示
+stoi(s, args, base); // 将s转换成int，base是进制数，args是一个size_t类型的对象，用于存放第一个不能转换的字符的下标
+stol(s, args, base); // 将s转换成long，base是进制数，args是一个size_t类型的对象，用于存放第一个不能转换的字符的下标
+stoul(s, args, base); // 将s转换成unsigned long，base是进制数，args是一个size_t类型的对象，用于存放第一个不能转换的字符的下标
+stoll(s, args, base); // 将s转换成long long，base是进制数，args是一个size_t类型的对象，用于存放第一个不能转换的字符的下标
+stoull(s, args, base); // 将s转换成unsigned long long，base是进制数，args是一个size_t类型的对象，用于存放第一个不能转换的字符的下标
+stof(s, args); // 将s转换成float，args是一个size_t类型的对象，用于存放第一个不能转换的字符的下标
+stod(s, args); // 将s转换成double，args是一个size_t类型的对象，用于存放第一个不能转换的字符的下标
+stold(s, args); // 将s转换成long double，args是一个size_t类型的对象，用于存放第一个不能转换的字符的下标
+```
+
+容器适配器
+
+stack queue priority_queue
+
+stack 先进后出
+
+
+```cpp
+stack<T> s; // s是空栈
+// 填满 
+for(size_t ix = 0; ix != 10; ++ix)
+    s.push(ix); // 将ix压入栈中
+while(!s.empty()){
+    int value = s.top(); // 访问栈顶元素
+    s.pop(); // 弹出栈顶元素
+}
+```
+
+queue 先进先出
+
+priority_queue 优先级队列
+
+
+priority_queue允许我们为队列中的元素建立优先级。新加入的元素会排在所有优先级比它低的已有元素之前。饭店按照客人预定时间而不是到来时间的早晚来为他们安排座位，就是一个优先队列的例子。默认情况下，标准库在元素类型上使用<运算符来确定相对优先级。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
