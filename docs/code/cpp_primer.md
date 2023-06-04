@@ -2,7 +2,7 @@
  * @Author: weiekko weiekko@gmail.com
  * @Date: 2023-05-29 22:33:22
  * @LastEditors: weiekko weiekko@gmail.com
- * @LastEditTime: 2023-06-03 20:44:38
+ * @LastEditTime: 2023-06-04 10:56:50
  * @FilePath: \docs\docs\code\cpp_primer.md
  * @Description: 
  * 
@@ -1256,10 +1256,107 @@ priority_queue允许我们为队列中的元素建立优先级。新加入的元
 
 
 
+## 10 泛型算法
 
+algorithm 头文件  numeric 头文件
 
+算法不直接操作容器 通过迭代器来访问元素
 
+```cpp
+auto result = find(vec.cbegin(), vec.cend(), val);
+```
 
+迭代器令算法不依赖于容器 但算法依赖于元素类型的操作
+
+只读算法
+
+```cpp
+find(b, e, t); // 在b和e指定的范围中查找值为t的元素
+accumulate(b, e, t); // 返回从b到e的和，t是和的初值
+equal(b, e, b2); // 如果两个序列在相同位置上的元素都相等，则返回true
+```
+
+写容器元素的算法
+
+```cpp
+fill(b, e, t); // 将b和e指定的范围内的每个元素都重置为t
+fill_n(b, n, t); // 将b指定的范围内的前n个元素都重置为t
+copy(b, e, b2); // 将b和e指定的范围内的元素拷贝到以b2开始的位置
+copy_n(b, n, b2); // 将b指定的范围内的前n个元素拷贝到以b2开始的位置
+copy_if(b, e, b2, f); // 将b和e指定的范围内的满足f的元素拷贝到以b2开始的位置
+copy_backward(b, e, e2); // 将b和e指定的范围内的元素拷贝到以e2结束的位置
+move(b, e, b2); // 将b和e指定的范围内的元素移动到以b2开始的位置
+move_backward(b, e, e2); // 将b和e指定的范围内的元素移动到以e2结束的位置
+transform(b, e, b2, f); // 将b和e指定的范围内的元素应用f并存储到以b2开始的位置
+generate(b, e, f); // 将b和e指定的范围内的元素应用f并存储到以b2开始的位置
+generate_n(b, n, f); // 将b指定的范围内的前n个元素应用f并存储到以b2开始的位置
+replace(b, e, t, t2); // 将b和e指定的范围内的值为t的元素替换为t2
+replace_if(b, e, f, t2); // 将b和e指定的范围内的满足f的元素替换为t2
+replace_copy(b, e, b2, t, t2); // 将b和e指定的范围内的值为t的元素替换为t2并拷贝到以b2开始的位置
+replace_copy_if(b, e, b2, f, t2); // 将b和e指定的范围内的满足f的元素替换为t2并拷贝到以b2开始的位置
+swap(a, b); // 交换a和b的值
+swap_ranges(b, e, b2); // 将b和e指定的范围内的元素与以b2开始的范围内的元素交换
+iter_swap(a, b); // 交换a和b的值
+reverse(b, e); // 将b和e指定的范围内的元素反转
+reverse_copy(b, e, b2); // 将b和e指定的范围内的元素反转并拷贝到以b2开始的位置
+rotate(b, b2, e); // 将b和e指定的范围内的元素旋转，b2指定了新的第一个元素
+···
+```
+
+重排容器元素的算法
+
+```cpp
+sort(b, e); // 将b和e指定的范围内的元素排序
+```
+
+消除重复单词
+
+```cpp
+sort(words.begin(), words.end()); // 将words按字典序排序
+auto end_unique = unique(words.begin(), words.end()); // 将不重复的元素放到前面
+words.erase(end_unique, words.end()); // 删除重复单词
+```
+
+lambda表达式
+
+```cpp
+sort(words.begin(), words.end(), [](const string &a, const string &b) { return a.size() < b.size(); });
+```
+
+lambda表达式的形式
+
+```cpp
+[capture list] (parameter list) -> return type { function body }
+```
+
+使用捕获列表
+
+```cpp
+auto wc = find_if(words.begin(), words.end(), [sz](const string &a) { return a.size() >= sz; });
+```
+
+for each
+
+```cpp
+for_each(words.begin(), words.end(), [](const string &s) { cout << s << " "; });
+```
+值捕获和引用捕获
+
+```cpp
+size_t v1 = 42; // 局部变量
+auto f = [v1] { return v1; }; // 值捕获：v1是拷贝初始化的
+v1 = 0;
+auto j = f(); // j为42，f保存了我们创建它时v1的拷贝
+```
+
+```cpp
+size_t v1 = 42; // 局部变量
+auto f2 = [&v1] { return v1; }; // 引用捕获：v1是引用
+v1 = 0;
+auto j2 = f2(); // j2为0，f2保存了对v1的引用
+```
+
+```cpp
 
 
 
