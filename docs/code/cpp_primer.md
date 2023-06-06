@@ -2,7 +2,7 @@
  * @Author: weiekko weiekko@gmail.com
  * @Date: 2023-05-29 22:33:22
  * @LastEditors: weiekko weiekko@gmail.com
- * @LastEditTime: 2023-06-04 10:56:50
+ * @LastEditTime: 2023-06-06 11:03:49
  * @FilePath: \docs\docs\code\cpp_primer.md
  * @Description: 
  * 
@@ -1354,6 +1354,95 @@ size_t v1 = 42; // 局部变量
 auto f2 = [&v1] { return v1; }; // 引用捕获：v1是引用
 v1 = 0;
 auto j2 = f2(); // j2为0，f2保存了对v1的引用
+```
+
+隐式捕获
+
+```cpp
+size_t v1 = 42; // 局部变量
+auto f3 = [=] { return v1; }; // 值捕获：v1是拷贝初始化的
+auto f4 = [&] { return v1; }; // 引用捕获：v1是引用
+auto f5 = [&, v1] { return v1; }; // 混合捕获：v1是引用
+auto f6 = [=, &v1] { return v1; }; // 混合捕获：v1是引用
+```
+ 
+可变lambda
+
+```cpp
+size_t v1 = 42; // 局部变量
+auto f = [v1] () mutable { return ++v1; }; // 值捕获：v1是拷贝初始化的
+v1 = 0;
+auto j = f(); // j为43，f保存了我们创建它时v1的拷贝
+```
+
+lambda返回类型
+
+```cpp
+//错误
+transform(vi.begin(), vi.end(), vi.begin(), [](int i) { if (i < 0) return -i; else return i; });
+```
+
+```cpp
+//正确
+transform(vi.begin(), vi.end(), vi.begin(), [](int i) -> int { if (i < 0) return -i; else return i; });
+```
+
+
+参数绑定
+
+```cpp
+auto check6 = bind(check_size, _1, 6);
+```
+
+```cpp
+auto wc = find_if(words.begin(), words.end(), bind(check_size, _1, sz));
+```
+
+```cpp
+auto wc = find_if(words.begin(), words.end(), [sz](const string &a) { return a.size() >= sz; });
+```
+
+使用placeholders
+
+```cpp
+using std::placeholders::_1;
+auto check6 = bind(check_size, _1, 6);
+```
+
+bind的参数
+    
+```cpp
+auto g = bind(f, a, b, _2, c, _1);
+g(x, y); // 等价于f(a, b, y, c, x)
+```
+
+绑定引用参数
+
+```cpp
+int f(int v1, int &v2, int v3);
+int i = 1024, j = 2048, k = 4096;
+auto g = bind(f, _2, ref(i), i);
+g(j); // 等价于f(j, i, i)
+```
+
+再探迭代器
+
+插入迭代器
+
+```cpp
+back_inserter(vi); // 返回一个迭代器，每次赋值都会调用push_back
+front_inserter(vi); // 返回一个迭代器，每次赋值都会调用push_front
+inserter(vi, vi.begin()); // 返回一个迭代器，每次赋值都会调用inse
+```
+
+iostream迭代器
+
+```cpp
+istream_iterator<int> int_it(cin); // 从cin读取int
+istream_iterator<int> int_eof; // 尾后迭代器
+ifstream in("afile"); // 打开文件
+istream_iterator<string> str_it(in); // 从in读取string
+istream_iterator<string> str_eof; // 尾后迭代器
 ```
 
 ```cpp
