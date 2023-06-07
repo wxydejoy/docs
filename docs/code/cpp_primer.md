@@ -2,7 +2,7 @@
  * @Author: weiekko weiekko@gmail.com
  * @Date: 2023-05-29 22:33:22
  * @LastEditors: weiekko weiekko@gmail.com
- * @LastEditTime: 2023-06-07 11:12:05
+ * @LastEditTime: 2023-06-07 19:13:37
  * @FilePath: \docs\docs\code\cpp_primer.md
  * @Description: 
  * 
@@ -1554,7 +1554,20 @@ _if 版本的算法
 find(beg, end, val); // 返回第一个等于val的元素的迭代器
 find_if(beg, end, pred); // 返回第一个令pred为true的元素的迭代器
 ```
+区分拷贝元素的版本和不拷贝的版本
 
+```cpp
+remove_if(beg, end, pred); // 删除满足pred的元素，不拷贝
+remove_copy_if(beg, end, dest, pred); // 删除满足pred的元素，拷贝到dest
+```
+
+#### 特定容器算法
+
+链表类型 list 和 forward_list 提供了自己的算法，它们定义了独有的 sort merge remove reverse 和 unique
+
+链表类型还定义了 splice
+
+链表的特有操作会改变容器
 
 
 
