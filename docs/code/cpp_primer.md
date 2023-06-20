@@ -2,7 +2,7 @@
  * @Author: weiekko weiekko@gmail.com
  * @Date: 2023-05-29 22:33:22
  * @LastEditors: weiekko weiekko@gmail.com
- * @LastEditTime: 2023-06-07 19:13:37
+ * @LastEditTime: 2023-06-20 18:38:28
  * @FilePath: \docs\docs\code\cpp_primer.md
  * @Description: 
  * 
@@ -1570,4 +1570,94 @@ remove_copy_if(beg, end, dest, pred); // 删除满足pred的元素，拷贝到de
 链表的特有操作会改变容器
 
 
+### 关联容器
 
+关联容器和顺序容器有着根本的不同：关联容器中的元素是按关键字米保存和访问的。与之相对，顺序容器中的元素是按它们在容器中的位置来顺序保存和访问的。
+
+虽然关联容器的很多行为与顺序容器相同，但其不同之处反映了关键字的作用。
+
+
+
+允许重复关键字的容器的名字中都包含单词multi:不保持关键字按顺序存储的容器的名字都以单词unordered开头。
+
+因此一个unordered multi set是一个允许重复关键字，元素无序保存的集合，而一个 set则是一个要求不重复关键字，有序存储的集合。
+
+#### map 关联数组
+
+map是一种关联容器，它包含一对关键字和值，关键字起到索引的作用，值则表示与索引相关联的数据。
+
+##### 使用 map
+
+```cpp
+map<string, size_t> word_count; // 空容器
+string word;
+while (cin >> word)
+    ++word_count[word]; // 计数器加1
+
+for (const auto &w : word_count) // 打印结果
+    cout << w.first << " occurs " << w.second << " times" << endl;
+```
+
+##### 使用 set
+
+```cpp
+map<string, size_t> word_count; // 空容器
+set<string> exclude = {"the", "but", "and", "or", "an", "a",
+                       "The", "But", "And", "Or", "An", "A"};
+string word;
+while (cin >> word) 
+    if (exclude.find(word) == exclude.end())   // 就是没找到
+        ++word_count[word]; // 计数器加1
+
+```
+
+find 调用返回一个迭代器。如果给定关键字在set中，迭代器指向该关键字。否则，find返回尾后迭代器。在此程序中，仅当word不在exclude中时我们才更新word的计数器。
+
+
+##### 关联容器概述
+
+注意 关联容器不支持顺序操作 比如 push_back push_front
+
+1. 定义关联容器
+
+    ```cpp
+    map<string, size_t> word_count; // 空容器  map 需要指名关键字类型和值类型
+    set<string> exclude = {"the", "but", "and", "or", "an", "a",
+                        "The", "But", "And", "Or", "An", "A"}; // set 只需要指名关键字类型
+
+    ```
+
+2. 关键字类型的要求
+
+    有序容器：严格弱序
+
+    无序容器：哈希函数和等价性运算符
+
+3. 使用关键字类型的比较函数
+
+    有序容器：可以指定自己的比较函数
+
+    无序容器：可以指定自己的哈希函数和等价性运算符
+
+4. pair 类型
+
+    pair 在 utility 头文件中定义
+
+    ```cpp
+    pair<string, string> author{"James", "Joyce"};
+    pair<string, string> author = make_pair("James", "Joyce");
+    ```
+
+    一个Pair保存两个数据成员。类似容器，pair是一个用来生成特定类型的模板。当创建一个pair时，我们必须提供两个类型名，pair的数据成员将具有对应的类型。两个类型不要求一样：
+
+    pair 的数据成员是 public 的，可以直接访问
+
+    ```cpp
+    pair<string, int> word_count;
+    cout << word_count.first; // 访问关键字
+    cout << word_count.second; // 访问值
+    ```
+    
+    map 的元素是 pair 类型
+
+    
