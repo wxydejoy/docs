@@ -1660,4 +1660,86 @@ find 调用返回一个迭代器。如果给定关键字在set中，迭代器指
     
     map 的元素是 pair 类型
 
-    
+#### 关联容器操作
+
+##### 关联容器迭代器
+
+当解引用一个关联容器迭代器时，我们会得到一个类型为容器的value_type的值的引用。对于map，value_type是一个pair类型，对于set，value_type就是关键字类型。
+
+```cpp
+map<string, size_t> word_count;
+for (auto it = word_count.begin(); it != word_count.end(); ++it)
+    cout << it->first << " occurs " << it->second << " times" << endl;
+++ (*it).second; // 等价于 ++it->second 可以修改值
+```
+
+set 的迭代器是 const 的，不能改变值
+
+遍历关联容器
+
+```cpp
+// 获得一个迭代器，指向第一个元素
+auto map_it = word_count.cbegin(); // map 的迭代器是 const 的
+// 只要map_it 没到尾后迭代器，就一直递增它
+while (map_it != word_count.cend()) {
+    // 解引用迭代器，输出元素
+    cout << map_it->first << " occurs " << map_it->second << " times" << endl;
+    ++map_it; // 递增迭代器
+}
+```
+
+##### 添加元素
+
+```cpp
+word_count.insert({word, 1}); // 插入一个元素
+word_count.insert(make_pair(word, 1)); // 插入一个元素
+word_count.insert(pair<string, size_t>(word, 1)); // 插入一个元素
+word_count.insert(map<string, size_t>::value_type(word, 1)); // 插入一个元素
+```
+
+##### 删除元素
+
+```cpp
+word_count.erase(iter); // 删除迭代器指定的元素 返回删除的元素的个数
+word_count.erase(key); // 删除关键字为key的元素 返回删除的元素的个数
+word_count.erase(beg, end); // 删除迭代器指定的范围的元素 返回删除的元素的个数
+```
+
+##### map 的下标操作
+
+set 不支持下标操作
+
+
+```cpp
+word_count[word] = 1; // 如果word不在word_count中，下标操作会添加一个具有关键字word的元素，关联值进行值初始化
+++word_count[word]; // 如果word已经在word_count中，下标操作返回一个引用，通过引用我们可以修改元素的值
+//at
+word_count.at(word) = 1; // 如果word不在word_count中，at会抛出一个out_of_range异常
+++word_count.at(word); // 如果word已经在word_count中，at返回一个引用，通过引用我们可以修改元素的值
+```
+
+##### 访问元素
+
+```cpp
+//find
+auto map_it = word_count.find(word); // 返回一个迭代器，指向关键字为word的元素，如果word不在容器中，返回尾后迭代器
+// 使用find代替下标操作 可以避免插入元素
+if (word_count.find("Anna") == word_count.end())
+    cout << "Anna is not in the map" << endl;
+else
+    cout << "Anna is in the map" << endl;
+```
+一种不同的，面向迭代器的解决方法 lower_bound 和 upper_bound 如果关键字存在，lower_bound返回一个迭代器，指向第一个等于给定关键字的元素；upper_bound返回一个迭代器，指向第一个大于给定关键字的元素。如果关键字不存在，两个函数都返回一个迭代器，指向关键字可以插入的位置。
+
+```cpp
+auto map_it = word_count.lower_bound(word); // 返回一个迭代器，指向第一个关键字不小于word的元素
+auto map_it = word_count.upper_bound(word); // 返回一个迭代器，指向第一个关键字大于word的元素
+auto map_it = word_count.equal_range(word); // 返回一个迭代器pair，表示关键字等于word的元素的范围
+
+//equal_range
+auto map_it = word_count.equal_range(word);
+if (map_it.first == map_it.second)
+    cout << "word " << word << " not found" << endl;
+else
+    cout << "word " << word << " occurs " << map_it.second - map_it.first << " times" << endl;
+```
