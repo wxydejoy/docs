@@ -1742,4 +1742,25 @@ if (map_it.first == map_it.second)
     cout << "word " << word << " not found" << endl;
 else
     cout << "word " << word << " occurs " << map_it.second - map_it.first << " times" << endl;
+
+
+    //find 代替下标操作
+    if (word_count.find("Anna") == word_count.end())
+        cout << "Anna is not in the map" << endl;
+    else
+        cout << "Anna is in the map" << endl;
+```
+
+multimap 和 multiset  find 
+    
+```cpp
+string search_item("Alain de Botton"); // 作者
+auto entries = authors.count(search_item); // 作者为search_item的书的数量
+auto iter = authors.find(search_item); // 指向第一本书 迭代器
+// 用一个循环查找所有作者为search_item的书
+while (entries) {
+    cout << iter->second << endl; // 打印每本书的书名
+    ++iter; // 前进到下一本书
+    --entries; // 该作者的作品数减1
+}
 ```
