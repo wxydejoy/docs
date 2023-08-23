@@ -1570,7 +1570,7 @@ remove_copy_if(beg, end, dest, pred); // 删除满足pred的元素，拷贝到de
 链表的特有操作会改变容器
 
 
-### 关联容器
+## 11 关联容器
 
 关联容器和顺序容器有着根本的不同：关联容器中的元素是按关键字米保存和访问的。与之相对，顺序容器中的元素是按它们在容器中的位置来顺序保存和访问的。
 
@@ -1764,3 +1764,362 @@ while (entries) {
     --entries; // 该作者的作品数减1
 }
 ```
+
+面向迭代器的解决方法
+
+```cpp
+for (auto beg = authors.lower_bound(search_item), end = authors.upper_bound(search_item); beg != end; ++beg)
+    cout << beg->second << endl; // 打印每本书的书名
+```
+
+equal_range 函数
+
+```cpp
+
+for (auto pos = authors.equal_range(search_item); pos.first != pos.second; ++pos.first)
+    cout << pos.first->second << endl; // 打印每本书的书名
+```
+
+
+##### 一个单词转换的map
+
+```cpp
+void word_transform(ifstream &map_file, ifstream &input){
+    auto trans_map = buildMap(mapfile) //保存转换规则
+    string text;
+    while(getline(input, text)) {
+        istringstream stream(text);
+        string word;
+        bool firstword = true;
+        while(stream >> word){
+            if (firstword)
+                firstword = false;
+            else
+                cout << " ";
+            cout << transform(word, trans_map);
+
+        }
+        cout << endl;
+    }
+
+
+}
+map<string, string> buildMap(ifstream &map_file){
+    map<string, string> transmap; //保存转换规则
+    string key; // 要转换的单词
+    string value; // 替换后的内容
+    // 读取第一个单词存入key中，行中剩余内容存入value
+    while(map_file >> key && getline(map_file, value))
+        if (value.size() > 1) // 检查是否有转换规则
+            transmap[key] = value.substr(1); // 跳过前导空格
+        else
+            throw runtime_error("no rule for " + key);
+    return transmap;
+} 
+
+const string &transform(const string &s, const map<string, string> &m){
+    // 实际的转换工作，这个函数是单词转换的核心
+    auto map_it = m.find(s);
+    if (map_it != m.cend())
+        return map_it->second; // 使用替换短语
+    else
+        return s; // 返回原string
+}
+
+```
+
+函数首先调用buildMap来生成单词转换map,我们将它保存在trans_map中。函数的剩余部分处理输入文件。while循环用get1ine一行一行地读取输入文件。这样做的目的是使得输出中的换行位置能和输入文件中一样。为了从每行中获取单词，我们使用了一个嵌套的while循环，它用一个istringstream(参见8.3节，第287页)来处理当前行中的每个单词。
+
+在输出过程中，内层while循环使用一个bool变量firstword来确定是否打印一个空格。它通过调用transform米获得要打印的单词。transform的返回值或者是 word中原来的string,或者是trans map中指出的对应的转换内容。
+
+
+### 无序容器
+
+无序容器使用哈希函数来组织元素，这些元素可以快速地根据关键字来查找。与关联容器不同，无序容器中的元素是无序存储的。
+
+无序容器在存储上组织为一组桶，每个桶保存零个或多个元素。无序容器使用一个哈希函数将元素映射到桶。无序容器中的元素是不按任何顺序保存的，因此无序容器不支持顺序性相关的操作，比如关联容器中的lower_bound和upper_bound操作。
+
+无序容器管理操作
+
+```cpp
+// 桶接口
+c.bucket_count(); // 返回当前使用的桶的数量
+c.max_bucket_count(); // 返回容器可容纳的最大桶的数量
+c.bucket_size(n); // 返回第n个桶中的元素数
+c.bucket(k); // 返回关键字等于k的元素所在的桶的编号
+// 桶迭代
+local_iterator  // 桶内迭代器类型
+const_local_iterator // 桶内迭代器类型
+c.begin(n); // 返回第n个桶的首迭代器
+c.end(n); // 返回第n个桶的尾后迭代器
+c.cbegin(n); // 返回第n个桶的首迭代器
+c.cend(n); // 返回第n个桶的尾后迭代器
+// 哈希策略
+c.load_factor(); // 返回容器中平均每个桶的元素数
+c.max_load_factor(); // 返回容器允许的最大负载因子
+c.rehash(n); // 重组存储，使得桶的数量至少为n
+c.reserve(n); // 重组存储，使得能保存n个元素而不必重新哈希
+```
+
+
+## 12 动态内存
+
+### 动态内存与智能指针
+
+```cpp
+new int; // 分配一个未初始化的动态分配对象，返回指向该对象的指针
+new int(1024); // 分配一个值为1024的动态分配对象，返回指向该对象的指针
+int *p1 = new int; // p1指向一个动态分配的、未初始化的、无名对象
+int *p2 = new int(); // p2指向一个动态分配的、值初始化为0的无名对象
+string *ps1 = new string; // 默认初始化的string
+delete p1; // 释放p1指向的对象
+```
+
+**智能指针**
+
+与普通指针的区别： 智能指针用于管理动态对象，它能自动释放对象。
+ 
+```cpp
+shared_ptr<int> p1; // shared_ptr可以指向一个int型对象 多个shared_ptr 可以指向同一个对象
+
+unique_ptr<string> p2(new string("hello")); // unique_ptr独占所指向的对象
+unique_ptr<string> p3(p2.release()); // p3接管了p2的指针
+
+weak_ptr<int> wp(p1); // weak_ptr是一种不控制所指向对象生存期的智能指针，它指向一个由shared_ptr管理的对象
+```
+#### shared_ptr
+
+```cpp
+shared_ptr<int> p1; // shared_ptr可以指向一个int型对象 多个shared_ptr 可以指向同一个对象
+shared_ptr<list<int>> p2; // shared_ptr可以指向一个int型对象 多个shared_ptr 可以指向同一个对象
+```
+
+**空值判断**
+    
+```cpp
+if (p1) // 如果p1指向一个对象
+if (p1 == nullptr) // 如果p1为空
+if (p1 != p2) // 如果p1和p2指向不同的对象
+```
+
+**shared_ptr 支持的操作**
+
+```cpp
+make_shared<T>(args); // 返回一个shared_ptr，指向一个动态分配的类型为T的对象，使用args初始化此对象
+shared_ptr<T> p(q); // p是shared_ptr q的拷贝，此操作会递增q中的计数器
+p = q; // p和q都是shared_ptr，所指向的对象必须能转换为T*，此操作会递增q中的计数器，递减p中的计数器
+p.unique(); // 如果p是唯一指向其对象的shared_ptr，则返回true
+p.use_count(); // 返回与p共享对象的智能指针数量
+```
+
+**make_shared 函数**
+
+最安全的分配和使用动态内存的方法是调用一个名为make_shared的标准库函数。
+
+```cpp
+shared_ptr<int> p3 = make_shared<int>(42); // 指向一个值为42的int
+shared_ptr<string> p4 = make_shared<string>(10, '9'); // 指向一个值为9999999999的string
+shared_ptr<int> p5 = make_shared<int>(); // 指向一个值初始化的int，即值为0
+```
+
+shared_ptr 的拷贝和赋值
+
+```cpp
+auto p = make_shared<int>(42); // p指向的对象只有p一个引用者
+auto q(p); // p和q指向相同对象，此对象有两个引用者
+auto r = make_shared<int>(42); // r指向的对象只有r一个引用者
+r = q; // 递增q指向对象的引用计数，递减r指向对象的引用计数  r 指向 p 指向的对象
+```
+
+shared_ptr 的拷贝和赋值会递增右侧运算对象的引用计数，递减左侧运算对象的引用计数。当引用计数变为0时，shared_ptr会自动释放自己管理的对象。
+
+shared_ptr 自动销毁所管理的对象 还会自动释放相关的内存
+
+如果你将shared_ptr存放于一个容器中，而后不再需要使用该容器的全部或部分元素，你可以使用erase成员来删除那些你不再需要的元素。erase成员会自动销毁元素，因此它会递减每个元素的引用计数。当一个元素的引用计数变为0时，shared_ptr类会自动释放内存。
+
+**使用了动态生存期的资源的类**
+
+原因
+
+1. 程序不知道自己需要使用多少对象
+2. 程序不知道所需对象的准确类型
+3. 程序需要在多个对象间共享数据
+
+
+#### 直接管理内存
+
+**new 和 delete 运算符**
+
+```cpp
+int *pi = new int; // pi指向一个动态分配的、未初始化的、无名对象
+int *pi = new int(); // pi指向一个动态分配的、值初始化为0的无名对象
+auto p1 = new auto(obj); // p1指向一个动态分配的对象，该对象的类型与obj的类型相同
+auto p2 = new auto{a, b, c}; // p2指向一个动态分配的对象，该对象是由a、b、c初始化得来的
+auto p3 = new auto(a, b, c); // 错误：括号中只能有单个初始化器
+```
+
+**动态分配的const对象**
+
+```cpp
+const int *pci = new const int(1024); // 分配一个动态分配的const int
+const string *pcs = new const string; // 分配一个动态分配的const string
+```
+
+**内存耗尽**
+
+```cpp
+int *p1 = new int; // 如果分配失败，new抛出std::bad_alloc异常
+int *p2 = new (nothrow) int; // 如果分配失败，new返回一个空指针  
+```
+
+**释放动态内存**
+
+```cpp
+delete p; // p必须指向一个动态分配的对象或者是一个空指针
+delete [] pa; // pa必须指向一个动态分配的数组或者是一个空指针
+```
+
+**指针和delete**
+
+```cpp
+int i, *pi1 = &i, *pi2 = nullptr;
+double *pd = new double(33), *pd2 = pd;
+delete i; // 错误：i不是指针
+delete pi1; // 未定义：pi1指向的不是动态分配的内存
+delete pd; // 正确：pd指向一个动态分配的对象
+delete pd2; // 未定义：指针pd2指向的内存已经被释放了
+delete pi2; // 正确：删除一个空指针总是安全的
+```
+
+**动态对象的生存期直到被释放时为止**
+
+**由内置指针（而不是智能指针）管理的动态内存的对象，在被显式释放之前一直存在。**
+
+动态内存的管理非常容易出错，常见问题如下
+1. 忘记释放内存
+2. 使用已经释放的对象
+3. 同一块内存释放多次
+
+**delete 之后重置指针值 这只是提供了有限的保护**
+
+```cpp
+int *p(new int(42)); // p指向动态分配的对象
+auto q = p; // q指向p所指向的对象
+delete p; // 但p和q都是未定义的，因为它们指向的对象已经被释放了
+p = nullptr; // 将p重置为指向空对象
+```
+
+#### shared_ptr 和 new 结合使用
+
+```cpp
+shared_ptr<double> p1; // shared_ptr可以指向一个double型对象
+shared_ptr<int> p2(new int(42)); // p2指向一个值为42的int
+// 不能将一个内置指针直接赋予一个智能指针
+shared_ptr<int> p3 = new int(1024); // 错误：不能将int*隐式转换为shared_ptr<int>
+shared_ptr<int> p4(new int(1024)); // 正确：使用直接初始化形式
+```
+
+**不要混合使用普通指针和智能指针**
+
+**也不要使用get初始化另一个智能指针或为另一个智能指针赋值**
+
+
+#### 智能指针和异常
+
+```cpp
+void f(){
+    shared_ptr<int> sp(new int(42)); // sp指向的对象只有sp一个引用者
+    // 在f内部发生异常，且没有捕获
+ }//在函数结束时，sp被销毁，它指向的对象也被销毁
+
+void f(){
+    int *ip = new int(42); // ip指向动态分配的对象
+    // 在f内部发生异常，且没有捕获
+    delete ip; // ip指向的对象不会被销毁
+}//在函数结束时，ip被销毁，但它指向的对象没有被销毁
+```
+
+**使用我们自己的释放操作**
+
+```cpp
+void end_connection(connection *p){
+    disconnect(*p);
+}
+
+void f(destination &d){
+    connection c = connect(&d);
+    shared_ptr<connection> p(&c, end_connection);
+    // 使用连接
+    // 当f退出时，即使通过异常退出，连接也会被正确关闭
+}
+```
+
+
+
+
+智能指针的规范
+1. 不使用相同的内置指针值初始化（或reset）多个智能指针
+2. 不delete get()返回的指针
+3. 不使用get()初始化或reset另一个智能指针
+4. 如果你使用get()返回的指针，记住当最后一个对应的智能指针销毁后，你的指针就变为无效了
+5. 如果你使用智能指针管理的资源不是new分配的内存，记住传递给它一个删除器
+
+
+#### unique_ptr
+
+```cpp
+unique_ptr<double> p1; // unique_ptr可以指向一个double型对象
+unique_ptr<int> p2(new int(42)); // p2指向一个值为42的int
+// unique_ptr不支持普通的拷贝或赋值操作
+unique_ptr<int> p3(p2); // 错误：不能拷贝unique_ptr
+unique_ptr<int> p4;
+p4 = p2; // 错误：不能赋值unique_ptr
+
+// 可以使用release或reset将指针的所有权从一个（非const）unique_ptr转移给另一个unique_ptr
+unique_ptr<string> p2(p1.release()); // release将p1置空，将它指向的string的内存管理权转移给p2
+unique_ptr<string> p3(new string("hello"));
+p2.reset(p3.release()); // reset释放了p2原来指向的内存，将其指向p3原来指向的内存
+```
+
+传递unique_ptr参数和返回unique_ptr
+
+```cpp
+unique_ptr<int> clone(int p){
+    //正确：使用int*显式初始化unique_ptr<int>
+    return unique_ptr<int>(new int(p));
+}
+
+```
+
+向unique_ptr传递删除器
+
+```cpp
+unique_ptr<objT, delT> p(new objT, fcn);
+
+void f(destination &d){
+    connection c = connect(&d);
+    unique_ptr<connection, decltype(end_connection)*> p(&c, end_connection);
+    // 使用连接
+    // 当f退出时，即使通过异常退出，连接也会被正确关闭
+}
+
+// p(&c, end_connection);：这是创建一个 std::unique_ptr 的实例 p，将连接对象的地址 &c 以及连接对象的析构函数 end_connection 提供给它。
+```
+
+#### weak_ptr
+
+特点  1. 指向shared_ptr管理的对象 2. 不控制所指向对象的生存期（即使shared_ptr销毁了对象，weak_ptr也可以继续指向对象）
+
+```cpp
+auto p = make_shared<int>(42);
+weak_ptr<int> wp(p); // wp weak_ptr指向p所指向的对象
+
+// weak_ptr的操作
+wp.expired(); // 如果wp.use_count()为0，返回true，否则返回false
+wp.lock(); // 返回一个shared_ptr，指向weak_ptr所指向的对象，对象已经被销毁，返回一个空shared_ptr
+wp.reset(); // 将wp置空
+```
+
+### 动态数组
+
+```cpp
