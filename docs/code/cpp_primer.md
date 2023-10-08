@@ -2122,4 +2122,144 @@ wp.reset(); // 将wp置空
 
 ### 动态数组
 
+#### new 和 数组
+
+初始化动态分配的数组
+
 ```cpp
+int *pia = new int[10]; // 10个未初始化的int
+int *pia2 = new int[10](); // 10个值初始化为0的int
+string *psa = new string[10]; // 10个空string
+string *psa2 = new string[10](); // 10个空string
+int *pia3 = new int[10]{0,1,2,3,4,5,6,7,8,9}; // 列表初始化
+string *psa3 = new string[10]{"a", "an", "the", string(3, 'x')}; // 列表初始化
+```
+动态分配一个空数组是合法的
+
+```cpp
+int *pia = new int[n]; // n是一个动态确定的值
+int *pia2 = new int[get_size()]; // get_size是一个返回值的函数
+```
+
+释放动态数组
+
+```cpp
+delete [] p; // p必须指向一个动态分配的数组或者是一个空指针
+```
+
+**WARNING**
+
+如果delete忘记加[]，编译器不会报错，则只会释放数组的第一个元素，其他元素的内存会泄露
+
+智能指针和动态数组
+
+```cpp
+unique_ptr<int[]> up(new int[10]); // up指向一个动态分配的int数组
+up.release(); // 自动调用delete[]，释放数组内存
+up.reset(new int[10]); // 自动调用delete[]，释放数组内存
+```
+
+
+与unique_ptr不同，shared_ptr不直接支持管理动态数组。如果需要使用shared_ptr管理一个动态数组，必须提供自己定义的删除器。
+
+```cpp
+shared_ptr<int> sp(new int[10], [](int *p){delete [] p;}); // 使用lambda来定义删除器
+```
+
+#### allocator 类
+
+```cpp
+allocator<string> alloc;
+auto const p = alloc.allocate(n);
+auto q = p; // q指向最后构造的元素之后的位置
+// 构造元素
+alloc.construct(q++); // *q为空字符串
+alloc.construct(q++, 10, 'c'); // *q为cccccccccc
+alloc.construct(q++, "hi"); // *q为hi
+cout << *p << endl; // 输出空字符串
+while (q != p)
+    alloc.destroy(--q); // 释放构造的元素  只能销毁构造的元素
+
+```
+
+拷贝和填充未初始化的内存
+
+```cpp
+auto p = alloc.allocate(vi.size() * 2); // 分配比vi大两倍的内存空间
+auto q = uninitialized_copy(vi.begin(), vi.end(), p); // 拷贝vi中的元素到p指向的空间中
+uninitialized_fill_n(q, vi.size(), 42); // 用42填充剩余空间
+```
+
+
+### 使用标准库：文本查询程序
+
+
+
+```cpp
+class QueryResult; // 前向声明
+//TextQuery类负责保存输入文件并且查询
+class TextQuery {
+public:
+    using line_no = std::vector<std::string>::size_type; // 行号
+    TextQuery(std::ifstream&);
+    QueryResult query(const std::string&) const; // 查询函数 const的作用是不修改数据成员
+private:
+    std::shared_ptr<std::vector<std::string>> file; // 输入文件
+    // 每个单词到它所在的行号的集合的映射
+    std::map<std::string, std::shared_ptr<std::set<line_no>>> wm;
+};
+//TextQuery类的构造函数
+TextQuery::TextQuery(std::ifstream &is) : file(new std::vector<std::string>) {
+    std::string text;
+    while (getline(is, text)) { // 对文件中每一行
+        file->push_back(text); // 保存此行文本  push_back 向vector中添加一个元素
+        int n = file->size() - 1; // 当前行号
+        std::istringstream line(text); // 将行文本分解为单词
+        std::string word;
+        while (line >> word) { // 对行中每个单词
+            // 如果单词不在wm中，以之为下标在wm中添加一项
+            auto &lines = wm[word]; // lines是一个shared_ptr
+            if (!lines) // 在我们第一次遇到这个单词时，此指针为空
+                lines.reset(new std::set<line_no>); // 分配一个新的set
+            lines->insert(n); // 将此行号插入set中
+        }
+    }
+}
+
+// QueryResult类负责保存查询结果并且打印
+class QueryResult {
+friend std::ostream& print(std::ostream&, const QueryResult&); // 友元函数 用于打印结果
+public:
+    QueryResult(std::string s, std::shared_ptr<std::set<line_no>> p, std::shared_ptr<std::vector<std::string>> f) : sought(s), lines(p), file(f) { }
+private:
+    std::string sought; // 查询单词
+    std::shared_ptr<std::set<line_no>> lines; // 出现的行号
+    std::shared_ptr<std::vector<std::string>> file; // 输入文件
+};
+
+QueryResult TextQuery::query(const std::string &sought) const {
+    // 如果未找到sought，我们将返回一个指向此set的指针
+    static std::shared_ptr<std::set<line_no>> nodata(new std::set<line_no>);
+    // 使用find而不是下标运算符来查找单词，避免将单词添加到wm中
+    auto loc = wm.find(sought);
+    if (loc == wm.end())
+        return QueryResult(sought, nodata, file); // 未找到
+    else
+        return QueryResult(sought, loc->second, file);
+}
+
+std::ostream &print(std::ostream &os, const QueryResult &qr) {
+    // 如果找到了单词，打印出现次数和所有出现的位置
+    os << qr.sought << " occurs " << qr.lines->size() << " " << make_plural(qr.lines->size(), "time", "s") << std::endl;
+    // 打印单词出现的每一行
+    for (auto num : *qr.lines) // 对set中每个单词
+        // 避免行号从0开始给用户带来的困惑
+        os << "\t(line " << num + 1 << ") " << *(qr.file->begin() + num) << std::endl;
+    return os;
+}
+
+```
+## 第三部分 类设计者的工具
+## 13 拷贝控制
+
+
